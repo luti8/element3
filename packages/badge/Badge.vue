@@ -6,13 +6,7 @@
         v-show="!hidden && (content || content === 0 || isDot)"
         v-text="content"
         class="el-badge__content"
-        :class="[
-          'el-badge__content--' + type,
-          {
-            'is-fixed': $slots.default,
-            'is-dot': isDot
-          }
-        ]"
+        :class="classes"
       >
       </sup>
     </transition>
@@ -20,8 +14,7 @@
 </template>
 
 <script>
-import { computed, toRefs } from 'vue'
-
+import { computed, toRefs, getCurrentInstance } from 'vue'
 export default {
   name: 'ElBadge',
 
@@ -41,19 +34,33 @@ export default {
   },
 
   setup(props) {
+    const { ctx } = getCurrentInstance()
     const { isDot, max, value } = toRefs(props)
-    const content = useContent(isDot, max, value)
+    const content = useContent({ isDot, max, value })
+    const classes = useClasses({ props, isDot, ctx })
 
     return {
-      content
+      content,
+      classes
     }
   }
 }
 
-const useContent = (isDot, max, value) => {
-  const content = computed(() => {
-    if (isDot.value) return
+const useClasses = ({ props, isDot, ctx }) => {
+  return computed(() => {
+    return [
+      'el-badge__content--' + props.type,
+      {
+        'is-fixed': ctx.$slots.default,
+        'is-dot': isDot
+      }
+    ]
+  })
+}
 
+const useContent = ({ isDot, max, value }) => {
+  return computed(() => {
+    if (isDot.value) return
     if (
       max &&
       typeof value.value === 'number' &&
@@ -61,10 +68,7 @@ const useContent = (isDot, max, value) => {
     ) {
       return max.value < value.value ? `${max.value}+` : value.value
     }
-
     return value.value
   })
-
-  return content
 }
 </script>
